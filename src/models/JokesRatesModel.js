@@ -1,9 +1,12 @@
 const {Schema , model, Types} = require('mongoose');
 
-//create schema
-const jokeRateSchema = Schema(
+const jokesRatesSchema = Schema(
   {
     _id: {
+      type: Types.ObjectId,
+      default: () => new Types.ObjectId(),
+    },
+    jokeId: {
       type: Types.ObjectId,
     },
     jokeText: {
@@ -21,9 +24,9 @@ const jokeRateSchema = Schema(
     },
   },
   {
-    collection: "jokeRate",
+    collection: "jokesRates",
   }
 );
 
 
-module.exports = model("JokeRate", jokeRateSchema);
+module.exports = model("JokesRates", jokesRatesSchema);

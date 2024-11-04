@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const Joke = require("../models/JokeModel");
-const JokeRate = require("../models/JokeRatesModel");
+const JokesRates = require("../models/JokesRatesModel");
 const path = require("path");
 const fs = require("fs");
 const csv = require("csv-parser");
@@ -21,26 +21,6 @@ class JokesController {
     }
   };
 
-  insertJokes = (req, res) => {
-    JokeRate.create(
-      {
-        _id: req.body._id,
-        jokeText: req.body.jokeText,
-        jokeHasHumor: req.body.jokeHasHumor,
-        jokeRate: req.body.jokeRate,
-      },
-      (error, data) => {
-        if (!error) {
-          data.save();
-          res.status(201).json({ message: "Joke Rate added", data });
-        } else {
-          console.log(error);
-          res.status(500).json({ message: "Error" });
-        }
-      }
-    );
-  };
-
   insertJokes = async (req, res) => {
     const jokesList = req.body.jokes;
     let insertedJokes = [];
@@ -48,18 +28,15 @@ class JokesController {
 
     for (const joke of jokesList) {
       try {
-        const jokeRate = new JokeRate({
-          _id: joke._id,
+        const jokesRates = new JokesRates({
+          jokeId: joke._id,
           jokeText: joke.jokeText,
           jokeHasHumor: joke.jokeHasHumor,
           jokeRate: joke.jokeRate,
         });
-        await jokeRate.save();
-        insertedJokes.push(jokeRate);
-        await Joke.updateOne(
-          { _id: joke._id },
-          { $inc: { jokeRateCount: 1 } } 
-        );
+        await jokesRates.save();
+        insertedJokes.push(jokesRates);
+        await Joke.updateOne({ _id: joke._id }, { $inc: { jokeRateCount: 1 } });
       } catch (error) {
         console.error(
           "Error al insertar el chiste o actualizar el count:",
@@ -76,13 +53,11 @@ class JokesController {
         errors,
       });
     } else {
-      res
-        .status(201)
-        .json({
-          message:
-            "Todos los chistes fueron insertados y actualizados exitosamente",
-          insertedJokes,
-        });
+      res.status(201).json({
+        message:
+          "Todos los chistes fueron insertados y actualizados exitosamente",
+        insertedJokes,
+      });
     }
   };
 
@@ -111,6 +86,23 @@ class JokesController {
         console.error("Error al leer el archivo CSV:", error);
         res.status(500).json({ message: "Error al leer el archivo CSV" });
       });
+  };
+
+  updateAllRatesCounts = async (req, res) => {
+    try {
+      const jokes = await Joke.find({});
+      for (const joke of jokes) {
+        const count = await JokesRates.countDocuments({ jokeId: joke._id });
+        await Joke.updateOne({ _id: joke._id }, { jokeRateCount: count });
+      }
+
+      res
+        .status(200)
+        .json({ message: "Contadores de chistes actualizados correctamente." });
+    } catch (error) {
+      console.error("Error al actualizar los contadores:", error);
+      res.status(500).json({ message: "Error al actualizar los contadores." });
+    }
   };
 }
 
