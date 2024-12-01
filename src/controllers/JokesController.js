@@ -6,9 +6,10 @@ const fs = require("fs");
 const csv = require("csv-parser");
 
 class JokesController {
+  
   getJokes = async (req, res) => {
     try {
-      const filteredJokes = await Joke.find({ jokeRateCount: { $ne: 4 } })
+      const filteredJokes = await Joke.find({ jokeRateCount: { $lt: 4 }})
         .sort({ jokeRateCount: 1 })
         .exec();
       const randomJokes = filteredJokes
@@ -36,7 +37,10 @@ class JokesController {
         });
         await jokesRates.save();
         insertedJokes.push(jokesRates);
-        await Joke.updateOne({ _id: joke._id }, { $inc: { jokeRateCount: 1 } });
+        await Joke.updateOne(
+          { _id: joke._id },
+          { $inc: { jokeRateCount: 1 } }
+        );
       } catch (error) {
         console.error(
           "Error al insertar el chiste o actualizar el count:",
@@ -104,6 +108,27 @@ class JokesController {
       res.status(500).json({ message: "Error al actualizar los contadores." });
     }
   };
+
+  retrieve = async (req, res) => {
+    try {
+      const jokes = await JokesRates.find({});
+
+      if (jokes.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No se encontraron registros." });
+      }
+      const jsonData = JSON.stringify(jokes, null, 2);
+
+      const filePath = path.join(__dirname, "jokes.json");
+      fs.writeFileSync(filePath, jsonData);
+      res.status(200);
+    } catch (error) {
+      console.error("Error al guardar los registros:", error);
+      res.status(500).json({ message: "Error al guardar los registros." });
+    }
+  };
+
 }
 
 module.exports = JokesController;

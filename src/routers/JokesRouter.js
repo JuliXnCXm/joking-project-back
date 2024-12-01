@@ -13,6 +13,7 @@ class JokesRouter {
     this.router.post("/all/jokes", objPhotoC.insertAllJokes);
     this.router.post("/user/jokes", objPhotoC.insertJokes);
     this.router.put("/user/jokesRates", objPhotoC.updateAllRatesCounts);
+    this.router.get("/retrieve", objPhotoC.retrieve)
   }
 }
 
