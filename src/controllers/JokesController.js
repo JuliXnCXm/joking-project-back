@@ -9,7 +9,7 @@ class JokesController {
   
   getJokes = async (req, res) => {
     try {
-      const filteredJokes = await Joke.find({ jokeRateCount: { $lt: 4 }})
+      const filteredJokes = await Joke.find({ jokeRateCount: { $lt: 3 }})
         .sort({ jokeRateCount: 1 })
         .exec();
       const randomJokes = filteredJokes
